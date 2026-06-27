@@ -20,3 +20,11 @@ novels/**/translated/
 novels/**/qc-report/
 novels/**/chapters.json
 novels/**/glossary.json
+
+# Copyrighted novel content — keep local only
+novels/**/raw-cn/
+novels/**/raw-en/
+novels/**/raw/
+novels/**/raw-th/
+novels/**/.hermes.md
+novels/**/3-way-comparison.md
