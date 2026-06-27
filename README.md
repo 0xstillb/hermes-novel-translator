@@ -11,7 +11,7 @@ hermes-novel-translator/
 │   ├── references/                                   # ข้อมูลอ้างอิง (พินอิน, สำนวนไทย, ฯลฯ)
 │   ├── scripts/                                      # utility scripts (glossary, stats)
 │   └── templates/                                    # pipeline templates (one-shot, glossary)
-├── novels/the-portal-of-wonderland/                  # ตัวอย่างโปรเจกต์นิยาย
+├── novels/exsample/                              # ตัวอย่างโปรเจกต์นิยาย (local only)
 └── setup-windows.bat                                 # Setup script สำหรับ Windows USB
 ```
 
@@ -46,13 +46,12 @@ hermes --profile translator
 วาง `setup-windows.bat` และ `hermes-novel-translator-pack.zip` ไว้ใน USB
 ดับเบิลคลิก `setup-windows.bat` — มันจะแตกไฟล์ skill + sample novel ไปที่ `%USERPROFILE%` อัตโนมัติ
 
-## ตัวอย่างการแปล (The Portal of Wonderland)
+## ตัวอย่างการแปล (exsample)
 
 ```
-novels/the-portal-of-wonderland/
-├── .hermes.md               # task config + name/term conventions
-├── raw-cn/ch001.txt         # ต้นฉบับจีน
-├── raw/ch001.txt            # ต้นฉบับอังกฤษ (แปลจากจีนอีกที)
-├── raw-th/ch001.txt         # ตัวอย่างไทยจาก WTR-LAB
-└── translated/ch001.md      # ฉบับแปลไทย (output)
+novels/exsample/
+├── raw-cn/ch001.txt         # ต้นฉบับจีน (local only)
+├── raw/ch001.txt            # ต้นฉบับอังกฤษ (local only)
+├── raw-th/ch001.txt         # ตัวอย่างไทย (local only)
+└── translated/              # output (local only)
 ```
