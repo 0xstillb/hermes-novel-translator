@@ -1,0 +1,182 @@
+## ต่อยอด Skill ให้ดีขึ้น (ไม่ต้อง Train Model)
+
+| สิ่งที่เพิ่มได้ | Impact | ยาก | ทำอะไร |
+|--------------|:------:|:---:|--------|
+| **Translation Memory** ⭐ | high | ง่าย | เก็บประโยคที่แปลแล้ว → ใช้ซ้ำ |
+| **Auto-Glossary Script** | high | กลาง | Python scan raw → เสนอชื่อ |
+| **Cultivation Templates** | กลาง | ง่าย | เซ็ตศัพท์สำเร็จรูปตามแนว |
+| **Progress Dashboard** | ต่ำ | ง่าย | แดชบอร์ด统计进度 |
+| **Fine-tune Model** | สูงมาก | **ยากมาก** | ต้อง train LoRA, ข้อมูล 1000+ คู่ |
+
+---
+
+### 🥇 Translation Memory (TM) — Impact สูงสุด
+
+```
+ปัญหาปัจจุบัน:
+  ch001: "a cold glint flashed through his eyes" → "แววตาเยียบเย็นวาบผ่าน"
+  ch050: "a cold glint flashed through his eyes" → "ประกายเย็นเฉียบวาบในดวงตา"
+  ❌ ไม่ consistent!
+
+Translation Memory แก้:
+  ch001 → save TM entry
+  ch050 → Hermes เปิด TM.json ก่อน → เห็นว่าเคยแปล → ใช้คำเดิม
+  ✅ consistent!
+```
+
+ตัวอย่าง `translation-memory.json`:
+
+```json
+{
+  "phrases": {
+    "a cold glint flashed through his eyes": {
+      "th": "แววตาเยียบเย็นวาบผ่าน",
+      "first_seen": "ch001",
+      "count": 12,
+      "notes": "ใช้ตอนแสดงความโกรธ/ดูถูก"
+    },
+    "his expression changed slightly": {
+      "th": "สีหน้าแปรเปลี่ยนเล็กน้อย",
+      "first_seen": "ch003",
+      "count": 8
+    },
+    "in the blink of an eye": {
+      "th": "ชั่วพริบตา",
+      "first_seen": "ch001",
+      "count": 15
+    },
+    "before anyone could react": {
+      "th": "ไม่ทันตั้งตัว",
+      "first_seen": "ch005",
+      "count": 6
+    }
+  },
+  "character_actions": {
+    "Shi Mu cupped his fists": {
+      "th": "ซือมู่ประสานมือคำนับ",
+      "count": 3
+    },
+    "Shi Mu frowned slightly": {
+      "th": "ซือมู่ขมวดคิ้วน้อยๆ",
+      "count": 7
+    }
+  }
+}
+```
+
+**วิธีใช้:** ก่อนแปล → อ่าน TM → ใช้ reference  
+**วิธีสะสม:** หลัง QC → auto-add new phrases ลง TM
+
+---
+
+### 🥇 Auto-Glossary Script
+
+Python script ที่ scan raw text → เสนอชื่อ + ความถี่:
+
+```python
+# scripts/auto-glossary.py
+import re, json, sys
+from collections import Counter
+
+def scan_names(text):
+    # Capitalized words ที่ไม่ใช่ขึ้นต้นประโยค
+    words = re.findall(r'\b[A-Z][a-z]+\b', text)
+    # Filter ชื่อคน (2+ chars, ไม่ใช่คำทั่วไป)
+    stopwords = {'The','This','That','Then','When','What','With','From','There','Here',
+                 'After','Before','Over','Under','Very','Still','Even','Though'}
+    names = [w for w in words if w not in stopwords and len(w) > 1]
+    return Counter(names)
+
+def scan_terms(text, glossary):
+    # scan คำศัพท์เฉพาะที่ควรแปล consistent
+    found = []
+    for en_term in glossary.get("terms", {}):
+        count = text.lower().count(en_term.lower())
+        if count > 0:
+            found.append({"term": en_term, "th": glossary["terms"][en_term]["th"], "count": count})
+    return found
+
+if __name__ == "__main__":
+    files = sys.argv[1:] or ["raw/ch001.txt"]
+    names = Counter()
+    for f in files:
+        with open(f) as fh:
+            names += scan_names(fh.read())
+    
+    print(f"=== Auto-Glossary Results ({len(files)} files) ===")
+    print(f"\nTop Names (frequency):")
+    for name, count in names.most_common(30):
+        print(f"  {name:20s} → ?      (x{count})")
+```
+
+**วิธีใช้:**
+```bash
+python3 scripts/auto-glossary.py raw/ch001.txt raw/ch002.txt raw/ch003.txt
+```
+
+ผลลัพธ์:
+```
+=== Auto-Glossary Results (3 files) ===
+
+Top Names (frequency):
+  Shi                  → ?      (x28)
+  Mu                   → ?      (x28)    # รวมกัน = Shi Mu
+  Jin                  → ?      (x15)
+  Cheng                → ?      (x10)
+  Feng                 → ?      (x8)
+  Kaiyuan              → ?      (x5)
+```
+
+**ถ้าอยากให้ดีขึ้น:** ใช้ NLP (spaCy) detect proper noun:
+```bash
+pip install spacy
+python3 -m spacy download en_core_web_sm
+python3 scripts/auto-glossary-advanced.py raw/ch001.txt
+```
+
+---
+
+### 🥇 Cultivation Templates
+
+เพิ่มเข้าไปใน `references/` — copy-paste ลง glossary.json:
+
+<｜｜DSML｜｜tool_calls>
+<｜｜DSML｜｜invoke name="write_file">
+<｜｜DSML｜｜parameter name="content" string="true">{
+  "cultivation_systems": {
+    "xianxia_classic": {
+      "name": "เซียนคลาสสิค",
+      "realms": [
+        "Qi Refining (练气) → ฝึกชี่",
+        "Foundation Establishment (筑基) → สร้างฐาน",
+        "Core Formation (结丹) → ก่อเกิดแดนทอง",
+        "Nascent Soul (元婴) → กำเนิดวิญญาณ",
+        "Spirit Severing (化神) → ตัดวิญญาณ",
+        "Dao Seeking (合体) → ตามหาเต๋า",
+        "Great Ascension (大乘) → มหาบรรลุ",
+        "Immortal (渡劫) → เซียน"
+      ]
+    },
+    "xianxia_body": {
+      "name": "บำเพ็ญกาย",
+      "realms": [
+        "Body Tempering (淬体) → บำเพ็ญกาย",
+        "Acquired (后天) → แปรธาตุ",
+        "Innate (先天) → กำเนิด",
+        "True Qi (真气) → พลังแท้จริง"
+      ]
+    },
+    "xuanhuan_magic": {
+      "name": "แฟนตาซีจีน",
+      "realms": [
+        "Magician学徒 → ผู้ฝึกหัด",
+        "Intermediate Magician → นักเวทกลาง",
+        "Advanced Magician → นักเวทสูง",
+        "Grand Magician → จอมเวท",
+        "Saint → นักบุญ",
+        "Semi-God → กึ่งเทพ",
+        "God → เทพ"
+      ]
+    }
+  }
+}

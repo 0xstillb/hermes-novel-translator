@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "novel_name": "",
+    "source_lang": "en",
+    "target_lang": "th",
+    "original_cn_title": "",
+    "total_chapters": 0,
+    "phase": "scout | names | translate",
+    "last_updated": ""
+  },
+  "source": {
+    "url": "",
+    "cn_url": "",
+    "total_chapters_available": 0,
+    "chapters_extracted": []
+  },
+  "characters": {
+    "EXAMPLE_NAME": {
+      "cn": "中文",
+      "pinyin": "Pinyin",
+      "en": "English",
+      "th": "ไทย",
+      "role": "protagonist | major | side | minor",
+      "frequency": 0,
+      "aliases_en": [],
+      "aliases_th": [],
+      "first_seen": "ch001",
+      "last_seen": "",
+      "verified": true,
+      "notes": ""
+    }
+  },
+  "locations": {
+    "EXAMPLE_LOCATION": {
+      "cn": "中文",
+      "pinyin": "Pinyin",
+      "en": "English",
+      "th": "ไทย",
+      "type": "city | sect | realm | continent",
+      "notes": ""
+    }
+  },
+  "terms": {
+    "English Term": {
+      "cn": "中文",
+      "pinyin": "pinyin",
+      "th": "ไทย",
+      "category": "cultivation | technique | item | title | rank",
+      "alias_th": ""
+    }
+  },
+  "chapters": {
+    "ch001": {
+      "status": "raw | names_extracted | draft | done",
+      "source": "raw/ch001.txt",
+      "source_cn": "raw-cn/ch001.txt",
+      "target": "translated/ch001.md",
+      "word_count": 0,
+      "last_translated": ""
+    }
+  }
+}
